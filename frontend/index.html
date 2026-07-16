@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screening System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome icons for modern UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Glow effects in background -->
+        <div class="glow-bg glow-1"></div>
+        <div class="glow-bg glow-2"></div>
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Screener<span class="gradient-text">.AI</span></h1>
+                    <span class="subtitle">Next-Gen Resume Parser & Matcher</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="icon-btn" title="Toggle Light/Dark Mode">
+                    <i class="fa-solid fa-sun light-icon"></i>
+                    <i class="fa-solid fa-moon dark-icon"></i>
+                </button>
+                
+                <!-- Info Button -->
+                <button id="info-btn" class="icon-btn" title="System Info">
+                    <i class="fa-solid fa-circle-info"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Workspace -->
+        <main class="app-workspace">
+            
+            <!-- Left Side: Inputs -->
+            <section class="panel-left">
+                <!-- Configuration Card -->
+                <div class="glass-card config-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-gears card-icon"></i>
+                        <h2>AI Screening Configuration</h2>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- API Key -->
+                        <div class="form-group">
+                            <label for="api-key-input">
+                                <span>Gemini API Key</span>
+                                <span class="label-badge badge-info">Optional (has local fallback)</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-key"></i>
+                                <input type="password" id="api-key-input" placeholder="Paste your Gemini API Key here...">
+                                <button id="toggle-key-visibility" class="inner-btn" type="button">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                            <span class="input-helper-text">If left blank, a local heuristic screener will simulate results offline.</span>
+                        </div>
+                        
+                        <!-- Job Description Selector -->
+                        <div class="form-group">
+                            <label for="jd-presets">Select Preset Job Description</label>
+                            <div class="select-wrapper">
+                                <select id="jd-presets">
+                                    <option value="" disabled selected>Choose a sample Job Profile...</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Description Content -->
+                        <div class="form-group">
+                            <label for="jd-textarea">Target Job Description (JD) <span class="required">*</span></label>
+                            <textarea id="jd-textarea" placeholder="Paste the details of the job profile here, including duties, required skills, tools, and experience..." required></textarea>
+                        </div>
+                        
+                        <!-- Advanced Weights Accordion -->
+                        <div class="accordion">
+                            <button class="accordion-trigger" type="button" id="weights-accordion-trigger">
+                                <span><i class="fa-solid fa-sliders-h"></i> Custom Match Weights</span>
+                                <i class="fa-solid fa-chevron-down chevron"></i>
+                            </button>
+                            <div class="accordion-content" id="weights-accordion-content">
+                                <div class="weight-sliders">
+                                    <div class="slider-group">
+                                        <div class="slider-label">
+                                            <span>Skills Fit</span>
+                                            <span id="skills-weight-val">40%</span>
+                                        </div>
+                                        <input type="range" id="skills-weight" min="0" max="100" value="40">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">
+                                            <span>Experience Fit</span>
+                                            <span id="experience-weight-val">30%</span>
+                                        </div>
+                                        <input type="range" id="experience-weight" min="0" max="100" value="30">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">
+                                            <span>Education Fit</span>
+                                            <span id="education-weight-val">20%</span>
+                                        </div>
+                                        <input type="range" id="education-weight" min="0" max="100" value="20">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">
+                                            <span>Culture/Other Fit</span>
+                                            <span id="other-weight-val">10%</span>
+                                        </div>
+                                        <input type="range" id="other-weight" min="0" max="100" value="10">
+                                    </div>
+                                    <span class="warning-text" id="weight-sum-warning" style="display:none;">
+                                        <i class="fa-solid fa-circle-exclamation"></i> Weights will be normalized to sum to 100%.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resume Upload Card -->
+                <div class="glass-card upload-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-file-arrow-up card-icon"></i>
+                        <h2>Upload Resumes</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Dropzone -->
+                        <div id="dropzone" class="dropzone">
+                            <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" style="display: none;">
+                            <div class="dropzone-content">
+                                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                                <p class="primary-text">Drag & drop resume files here</p>
+                                <p class="secondary-text">Supports PDF, Word (DOCX), or TXT</p>
+                                <button type="button" id="browse-btn" class="secondary-btn">Browse Files</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Sample Resumes quick loader -->
+                        <div class="sample-resumes-container">
+                            <span class="sample-label">Or test with Server Samples:</span>
+                            <div class="sample-buttons" id="sample-resumes-list">
+                                <!-- Populated dynamically -->
+                                <span class="loading-inline"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Queue list -->
+                        <div class="upload-queue-container" style="display: none;" id="queue-container">
+                            <h3>Files Queue (<span id="queue-count">0</span>)</h3>
+                            <div class="upload-queue-list" id="queue-list">
+                                <!-- Dynamic queue items -->
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="upload-actions">
+                            <button id="clear-queue-btn" class="secondary-btn flex-1" style="display: none;">
+                                <i class="fa-solid fa-trash-can"></i> Clear All
+                            </button>
+                            <button id="start-screening-btn" class="primary-btn flex-2" disabled>
+                                <span class="btn-text"><i class="fa-solid fa-circle-play"></i> Screen Resumes</span>
+                                <span class="spinner-container" style="display: none;">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Processing...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Right Side: Stats & Screen Results -->
+            <section class="panel-right">
+                <!-- Dashboard Stats -->
+                <div class="stats-grid">
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-blue">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-total">0</span>
+                            <span class="stat-label">Total Screened</span>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-purple">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-avg">-%</span>
+                            <span class="stat-label">Avg. Match Score</span>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon icon-green">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-top">-</span>
+                            <span class="stat-label">Top Recommendation</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Table Card -->
+                <div class="glass-card results-card flex-grow">
+                    <div class="card-header results-header-row">
+                        <div class="header-left">
+                            <i class="fa-solid fa-list-check card-icon"></i>
+                            <h2>Screened Candidates</h2>
+                        </div>
+                        
+                        <!-- Search and Filter controls -->
+                        <div class="header-actions-row">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="search-input" placeholder="Search by name, skills...">
+                            </div>
+                            <div class="select-wrapper filter-select">
+                                <select id="score-filter">
+                                    <option value="all">All Match Levels</option>
+                                    <option value="strong">Strong Matches (80%+)</option>
+                                    <option value="potential">Potential Matches (60-79%)</option>
+                                    <option value="low">Low Matches (<60%)</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body no-padding table-scroll-container">
+                        <!-- Table View -->
+                        <table class="results-table" id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Candidate Name</th>
+                                    <th>Match Grade</th>
+                                    <th>Overall Score</th>
+                                    <th>Experience</th>
+                                    <th>Education</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-tbody">
+                                <tr id="empty-state">
+                                    <td colspan="6" class="table-empty-state">
+                                        <div class="empty-state-content">
+                                            <i class="fa-solid fa-folder-open empty-icon"></i>
+                                            <h3>No Resumes Screened Yet</h3>
+                                            <p>Upload files or load server samples, then click "Screen Resumes" to view results.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Results rows populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Sliding Details Drawer (Full Analysis) -->
+        <div class="side-drawer-overlay" id="drawer-overlay"></div>
+        <div class="side-drawer" id="side-drawer">
+            <button class="close-drawer-btn" id="close-drawer-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="drawer-header">
+                <div class="candidate-header-avatar">
+                    <span id="drawer-avatar-letters">CS</span>
+                </div>
+                <div class="candidate-header-info">
+                    <h2 id="drawer-candidate-name">Candidate Name</h2>
+                    <p id="drawer-current-title" class="candidate-subtitle">Current Job Title</p>
+                    <div class="candidate-contacts">
+                        <span id="drawer-email-span"><i class="fa-regular fa-envelope"></i> <a href="#" id="drawer-email-link">email@domain.com</a></span>
+                        <span id="drawer-phone-span"><i class="fa-solid fa-phone"></i> <span id="drawer-phone-text">555-123-4567</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drawer-body">
+                <!-- Evaluation Banner Recommendation -->
+                <div class="drawer-section no-border">
+                    <div class="recommendation-badge-container">
+                        <span class="recommendation-badge" id="drawer-recommendation-badge">Strong Match</span>
+                        <span class="score-pill" id="drawer-overall-score-pill">88% Match</span>
+                    </div>
+                </div>
+                
+                <!-- Resume Summary -->
+                <div class="drawer-section">
+                    <h3><i class="fa-solid fa-user-tie"></i> Profile Summary</h3>
+                    <p id="drawer-summary-text" class="summary-paragraph">Summary text from AI evaluation...</p>
+                </div>
+                
+                <!-- Scores Breakdown -->
+                <div class="drawer-section">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Match Breakdown</h3>
+                    <div class="score-breakdown-list">
+                        <div class="breakdown-item">
+                            <div class="breakdown-labels">
+                                <span>Skills Alignment</span>
+                                <span id="drawer-skills-score">80%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill fill-blue" id="drawer-skills-bar" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-labels">
+                                <span>Experience Alignment</span>
+                                <span id="drawer-experience-score">70%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill fill-purple" id="drawer-experience-bar" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-labels">
+                                <span>Education Alignment</span>
+                                <span id="drawer-education-score">90%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill fill-green" id="drawer-education-bar" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skills Gap analysis -->
+                <div class="drawer-section">
+                    <h3><i class="fa-solid fa-brain"></i> Skills Alignment</h3>
+                    <div class="skills-alignment-box">
+                        <div class="skills-block-subtitle">Matched Skills</div>
+                        <div class="skills-tags-container" id="drawer-matched-skills-tags">
+                            <!-- Green tags -->
+                        </div>
+                        <div class="skills-block-subtitle mt-15">Missing / Gap Skills</div>
+                        <div class="skills-tags-container" id="drawer-missing-skills-tags">
+                            <!-- Orange tags -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Strengths and Weaknesses -->
+                <div class="drawer-section grid-two-columns">
+                    <div>
+                        <h3><i class="fa-regular fa-thumbs-up color-green"></i> Key Strengths</h3>
+                        <ul class="bullet-list green-bullets" id="drawer-strengths-ul">
+                            <!-- Strengths -->
+                        </ul>
+                    </div>
+                    <div>
+                        <h3><i class="fa-regular fa-thumbs-down color-amber"></i> Gaps / Areas to Probe</h3>
+                        <ul class="bullet-list amber-bullets" id="drawer-weaknesses-ul">
+                            <!-- Weaknesses -->
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Suggested Interview Questions -->
+                <div class="drawer-section">
+                    <h3><i class="fa-solid fa-clipboard-question"></i> AI Suggested Interview Questions</h3>
+                    <div class="questions-list" id="drawer-questions-div">
+                        <!-- Questions block -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drawer-footer">
+                <button class="secondary-btn" id="drawer-download-json-btn">
+                    <i class="fa-solid fa-code"></i> Download JSON Analysis
+                </button>
+                <button class="primary-btn" id="drawer-print-btn">
+                    <i class="fa-solid fa-file-pdf"></i> Print / Export Report
+                </button>
+            </div>
+        </div>
+        
+        <!-- Info Modal -->
+        <div class="modal-overlay" id="info-modal-overlay"></div>
+        <div class="modal" id="info-modal">
+            <div class="modal-header">
+                <h2>About Screener.AI</h2>
+                <button class="close-modal-btn" id="close-modal-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Screener.AI</strong> is a powerful tool designed to help recruiters parse, evaluate, and rank resumes against a specific job description.</p>
+                
+                <h3>How It Works:</h3>
+                <ol>
+                    <li>Provide your <strong>Gemini API Key</strong> (stored strictly in local memory and not shared). If you don't have a key, the system will run a local matching simulation.</li>
+                    <li>Enter the target <strong>Job Description</strong> (you can select one of the presets to try it out immediately).</li>
+                    <li>Upload resume files (PDF, DOCX, TXT) or click the <strong>Server Samples</strong> to load pre-made candidates.</li>
+                    <li>Configure evaluation weights for Skills, Experience, and Education in the weights panel.</li>
+                    <li>Click <strong>Screen Resumes</strong> to evaluate all resumes at once. Click any row in the dashboard to review a deep analysis.</li>
+                </ol>
+                
+                <h3>Technological Stack:</h3>
+                <ul>
+                    <li><strong>Backend:</strong> Python, FastAPI, PyPDF, Python-Docx</li>
+                    <li><strong>AI:</strong> Google Gemini 1.5 Flash (enforcing structured JSON outputs)</li>
+                    <li><strong>Frontend:</strong> HTML5, CSS3 (Custom Glassmorphism), Vanilla JavaScript</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script References -->
+    <script src="app.js"></script>
+</body>
+</html>
